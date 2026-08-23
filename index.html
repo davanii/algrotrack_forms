@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#378add">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Algoculture">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon-192.png">
+  <title>Algoculture – Collecte</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<!-- Bannière hors-ligne -->
+<div class="offline-bar" id="offline-bar">📡 Hors-ligne — les relevés seront envoyés dès la reconnexion</div>
+<!-- Bannière synchro réussie -->
+<div class="sync-bar" id="sync-bar">✓ Relevés synchronisés avec Google Sheets</div>
+
+<div class="wrap">
+  <h1>Collecte — Algoculture</h1>
+
+  <!-- ═══ FILE D'ATTENTE ═══════════════════════════════════════════════════ -->
+  <div id="view-queue">
+    <div class="card">
+      <div class="card-title">Relevés en attente d'envoi</div>
+      <div id="queue-list"><div class="queue-empty">Aucun relevé sauvegardé.</div></div>
+    </div>
+    <button class="btn-primary" onclick="startNewReleve()">+ Nouveau relevé</button>
+    <button class="btn-success" id="btn-send-all" onclick="sendAll()" style="margin-top:8px" disabled>Tout envoyer vers Google Sheets</button>
+    <div id="send-status" class="hidden"></div>
+  </div>
+
+  <!-- ═══ FORMULAIRE ════════════════════════════════════════════════════════ -->
+  <div id="view-form" class="hidden">
+    <div class="step-indicator">
+      <div class="step-block"><div class="step active" id="s1">1</div><div class="step-label">Site</div></div>
+      <div class="step-line"></div>
+      <div class="step-block"><div class="step pending" id="s2">2</div><div class="step-label">Lignes</div></div>
+      <div class="step-line"></div>
+      <div class="step-block"><div class="step pending" id="s3">3</div><div class="step-label">Données</div></div>
+      <div class="step-line"></div>
+      <div class="step-block"><div class="step pending" id="s4">4</div><div class="step-label">Recap</div></div>
+    </div>
+
+    <!-- Étape 1 -->
+    <div id="page1">
+      <div class="card">
+        <div class="card-title">Identification du site</div>
+        <div class="row2">
+          <div class="field">
+            <label>Secteur</label>
+            <select id="secteur" onchange="onSecteurChange()">
+              <option value="">— Secteur —</option>
+              <option>ADK</option><option>BDA</option><option>MKN</option><option>MKC</option>
+              <option>MKS</option><option>BTL</option><option>BRB</option><option>OLY</option>
+              <option>TPS</option><option>LNT</option><option>KMT</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Site de culture</label>
+            <select id="site" onchange="onSiteChange()" disabled>
+              <option value="">— Site —</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>RTPA <span style="font-size:11px;color:#aaa">(auto)</span></label>
+            <input type="text" id="rtpa" readonly placeholder="—">
+          </div>
+          <div class="field">
+            <label>Technicien <span style="font-size:11px;color:#aaa">(auto)</span></label>
+            <input type="text" id="technicien" readonly placeholder="—">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>N° Tehake</label><select id="tehake"><option value="">— Choisir —</option><option>THK1</option><option>THK2</option><option>THK3</option><option>THK4</option><option>THK5</option><option>THK6</option><option>THK7</option><option>THK8</option><option>THK9</option><option>THK10</option><option>THK11</option><option>THK12</option><option>THK13</option><option>THK14</option><option>THK15</option><option>THK16</option><option>THK17</option><option>THK18</option><option>THK19</option><option>THK20</option><option>THK21</option><option>THK22</option><option>THK23</option><option>THK24</option></select></div>
+          <div class="field"><label>Zone de culture</label>
+          <select id="zone" disabled onchange="onZoneChange()"><option value="">— Choisir un site d'abord —</option></select>
+          <input type="text" id="zone-autre" placeholder="Précisez la zone..." style="margin-top:6px;display:none">
+        </div>
+        </div>
+      </div>
+      <div class="nav-btns">
+        <button class="btn-secondary" onclick="showQueue()">← Retour</button>
+        <button class="btn-primary" style="flex:1" onclick="goStep2()">Continuer →</button>
+      </div>
+    </div>
+
+    <!-- Étape 2 -->
+    <div id="page2" class="hidden">
+      <div class="card">
+        <div class="card-title">Nombre de lignes test</div>
+        <div class="info-box">Combien de lignes test pour ce site ?</div>
+        <div class="field" style="display:flex;flex-direction:column;align-items:center;gap:1rem;padding:1rem 0">
+          <div class="n-input">
+            <button class="n-btn" onclick="changeN(-1)">−</button>
+            <input type="number" id="nbLignes" value="1" min="1" max="20" style="width:80px;text-align:center;font-size:24px;font-weight:500" inputmode="numeric">
+            <button class="n-btn" onclick="changeN(1)">+</button>
+          </div>
+          <span style="font-size:13px;color:#888">ligne(s) test à saisir</span>
+        </div>
+      </div>
+      <div class="nav-btns">
+        <button class="btn-secondary" onclick="goStep1()">← Retour</button>
+        <button class="btn-primary" style="flex:1" onclick="goStep3()">Générer →</button>
+      </div>
+    </div>
+
+    <!-- Étape 3 -->
+    <div id="page3" class="hidden">
+      <div id="lignes-container"></div>
+      <div class="nav-btns" style="margin-top:.5rem">
+        <button class="btn-secondary" onclick="goStep2()">← Retour</button>
+        <button class="btn-primary" style="flex:1" onclick="goStep4()">Récapitulatif →</button>
+      </div>
+    </div>
+
+    <!-- Étape 4 -->
+    <div id="page4" class="hidden">
+      <div class="card">
+        <div class="card-title">Récapitulatif</div>
+        <table class="recap-table">
+          <tr><td>Secteur</td><td id="r-secteur"></td></tr>
+          <tr><td>Site</td><td id="r-site"></td></tr>
+          <tr><td>RTPA</td><td id="r-rtpa"></td></tr>
+          <tr><td>Technicien</td><td id="r-tech"></td></tr>
+          <tr><td>Tehake</td><td id="r-tehake"></td></tr>
+          <tr><td>Zone</td><td id="r-zone"></td></tr>
+        </table>
+      </div>
+      <div id="recap-lignes"></div>
+      <div class="nav-btns" style="margin-top:.5rem">
+        <button class="btn-secondary" onclick="goStep3()">← Modifier</button>
+        <button class="btn-primary" style="flex:1" onclick="sauvegarder()">💾 Sauvegarder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CONFIRMATION SAUVEGARDE ══════════════════════════════════════════ -->
+  <div id="view-saved" class="hidden">
+    <div class="card" style="text-align:center;padding:2rem">
+      <div style="font-size:52px;margin-bottom:.75rem">💾</div>
+      <div style="font-size:18px;font-weight:500;margin-bottom:.5rem">Relevé sauvegardé</div>
+      <div style="font-size:14px;color:#888;margin-bottom:1.5rem" id="saved-info"></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn-primary" onclick="startNewReleve()">+ Nouveau relevé</button>
+        <button class="btn-secondary" style="width:100%" onclick="showQueue()">Voir la file d'attente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SUCCÈS ENVOI ══════════════════════════════════════════════════════ -->
+  <div id="view-success" class="hidden">
+    <div class="card" style="text-align:center;padding:2rem">
+      <div style="font-size:52px;margin-bottom:.75rem">✓</div>
+      <div style="font-size:18px;font-weight:500;margin-bottom:.5rem">Tout envoyé !</div>
+      <div style="font-size:14px;color:#888;margin-bottom:.25rem" id="success-info"></div>
+      <div style="font-size:13px;color:#aaa;margin-bottom:1.5rem">Vérifiez votre Google Sheet.</div>
+      <button class="btn-primary" onclick="startNewReleve()">Nouveau relevé</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SHEETS_URL  = "https://script.google.com/macros/s/AKfycbz-O-4jdjf1TnHDDnnTm32YhN_k68fuZBoe7BHmNURtJqEu5eJ_NCq-2-5ef0twaYwsCA/exec";
+  const SYNC_TAG    = "sync-releves";
+  let editingId     = null;
+
+  // ─── Données ──────────────────────────────────────────────────────────────────
+  const DATA = {
+    // Données chargées dynamiquement depuis l'onglet Référentiel de Google Sheets
+    // Ce bloc sert de fallback si le Sheet est inaccessible et qu'il n'y a pas de cache
+    "ADK": {}, "BDA": {}, "MKN": {}, "MKC": {}, "MKS": {},
+    "BTL": {}, "BRB": {}, "OLY": {}, "TPS": {}, "LNT": {}, "KMT": {}
+  };
+
+  const LIGNES_NUM = ["LT1","LT 1F","LT2","LT 2F","LT3","LT 3F"];
+  const VARIETES   = ["Sacol (Cottonii)","Tambalang (Cottonii)","Spinosum"];
+  const MALADIES   = ["EFA stade 1","EFA stade 2","EFA stade 3","EFA stade 4","Ice-Ice","Broutage","Lomodraty"];
+
+  const ZONES_PAR_SITE = {
+    // Zones chargées dynamiquement depuis l'onglet Référentiel de Google Sheets (colonne E)
+  };
+
+
+  // ─── IndexedDB ────────────────────────────────────────────────────────────────
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open("algoculture", 1);
+      req.onupgradeneeded = e => e.target.result.createObjectStore("queue", { keyPath: "id" });
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror   = e => reject(e.target.error);
+    });
+  }
+
+  async function getQueue() {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const req = db.transaction("queue","readonly").objectStore("queue").getAll();
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror   = e => reject(e.target.error);
+    });
+  }
+
+  async function upsertItem(item) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const req = db.transaction("queue","readwrite").objectStore("queue").put(item);
+      req.onsuccess = () => resolve();
+      req.onerror   = e => reject(e.target.error);
+    });
+  }
+
+  async function deleteItem(id) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const req = db.transaction("queue","readwrite").objectStore("queue").delete(id);
+      req.onsuccess = () => resolve();
+      req.onerror   = e => reject(e.target.error);
+    });
+  }
+
+  async function clearDB() {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const req = db.transaction("queue","readwrite").objectStore("queue").clear();
+      req.onsuccess = () => resolve();
+      req.onerror   = e => reject(e.target.error);
+    });
+  }
+
+  // ─── Hors-ligne ───────────────────────────────────────────────────────────────
+  function updateOfflineBar() {
+    const bar = document.getElementById("offline-bar");
+    if (!navigator.onLine) {
+      bar.classList.add("show");
+      document.body.classList.add("offline-mode");
+    } else {
+      bar.classList.remove("show");
+      document.body.classList.remove("offline-mode");
+    }
+  }
+  window.addEventListener("online",  updateOfflineBar);
+  window.addEventListener("offline", updateOfflineBar);
+
+  // ─── Service Worker ───────────────────────────────────────────────────────────
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").then(reg => {
+      console.log("SW enregistré");
+    });
+    // Écouter les messages du SW (synchro réussie)
+    navigator.serviceWorker.addEventListener("message", e => {
+      if (e.data?.type === "SYNC_SUCCESS") {
+        clearDB().then(() => {
+          showSyncBar();
+          renderQueue();
+        });
+      }
+    });
+  }
+
+  function showSyncBar() {
+    const bar = document.getElementById("sync-bar");
+    bar.classList.add("show");
+    setTimeout(() => bar.classList.remove("show"), 4000);
+  }
+
+  // Déclencher une synchro en arrière-plan
+  async function requestSync() {
+    if ("serviceWorker" in navigator && "SyncManager" in window) {
+      const reg = await navigator.serviceWorker.ready;
+      await reg.sync.register(SYNC_TAG);
+    }
+  }
+
+  // ─── Vues ─────────────────────────────────────────────────────────────────────
+  function showView(id) {
+    ["view-queue","view-form","view-saved","view-success"].forEach(v =>
+      document.getElementById(v).classList.add("hidden"));
+    document.getElementById(id).classList.remove("hidden");
+    window.scrollTo(0, 0);
+  }
+
+  async function showQueue() {
+    await renderQueue();
+    showView("view-queue");
+  }
+
+  async function renderQueue() {
+    const q    = await getQueue();
+    const list = document.getElementById("queue-list");
+    const btn  = document.getElementById("btn-send-all");
+    if (q.length === 0) {
+      list.innerHTML = '<div class="queue-empty">Aucun relevé sauvegardé.</div>';
+      btn.disabled = true; btn.textContent = "Tout envoyer vers Google Sheets"; return;
+    }
+    const total = q.reduce((a, r) => a + r.lignes.length, 0);
+    list.innerHTML = q.map(r => `
+      <div class="queue-item">
+        <div class="queue-item-info">
+          <div class="queue-item-title">${r.site} <span class="badge badge-orange">${r.lignes.length} ligne(s)</span></div>
+          <div class="queue-item-sub">${r.secteur} · ${r.technicien || "Sans technicien"} · ${r.savedAt}</div>
+        </div>
+        <div class="queue-item-actions">
+          <button class="btn-edit"   onclick="editReleve(${r.id})">Modifier</button>
+          <button class="btn-danger" onclick="deleteReleve(${r.id})">✕</button>
+        </div>
+      </div>`).join("");
+    btn.disabled = false;
+    btn.textContent = `Tout envoyer (${q.length} relevé(s), ${total} ligne(s))`;
+  }
+
+  async function deleteReleve(id) {
+    if (!confirm("Supprimer ce relevé ?")) return;
+    await deleteItem(id);
+    renderQueue();
+  }
+
+  // ─── Modifier un relevé ───────────────────────────────────────────────────────
+  async function editReleve(id) {
+    const q = await getQueue();
+    const releve = q.find(r => r.id === id);
+    if (!releve) return;
+    editingId = id;
+
+    document.getElementById("secteur").value   = releve.secteur;
+    onSecteurChange();
+    document.getElementById("site").value       = releve.site;
+    document.getElementById("rtpa").value       = releve.rtpa || "";
+    document.getElementById("technicien").value = releve.technicien || "";
+    document.getElementById("tehake").value = releve.tehake || "";
+    // Restaurer la zone (liste ou saisie libre)
+    const zoneEditEl = document.getElementById("zone");
+    const zoneAutreEl = document.getElementById("zone-autre");
+    const zonesDispos = Array.from(zoneEditEl.options).map(o => o.value);
+    if (releve.zone && !zonesDispos.includes(releve.zone)) {
+      // La zone sauvegardée n'est pas dans la liste → "Autre..."
+      zoneEditEl.value = "__autre__";
+      zoneAutreEl.style.display = "block";
+      zoneAutreEl.value = releve.zone;
+    } else {
+      zoneEditEl.value = releve.zone || "";
+      zoneAutreEl.style.display = "none";
+      zoneAutreEl.value = "";
+    }
+    document.getElementById("nbLignes").value   = releve.lignes.length;
+
+    buildLignes(releve.lignes.length);
+    releve.lignes.forEach((ligne, i) => {
+      setSelectVal("num-ligne-" + i, ligne.numLigne);
+      setSelectVal("pesage-"    + i, ligne.pesage);
+      setSelectVal("variete-"    + i, ligne.variete);
+      setSelectVal("typeculture-"+ i, ligne.typeculture);
+      setSelectVal("materiel-"   + i, ligne.materiel);
+      document.getElementById("date-"     + i).value = ligne.date        || "";
+      document.getElementById("poids-"    + i).value = ligne.poids       || "";
+      document.getElementById("boutures-" + i).value = ligne.boutures    || "";
+      document.getElementById("obs-"      + i).value = ligne.observation || "";
+      const vals = [ligne.efa1, ligne.efa2, ligne.efa3, ligne.efa4, ligne.iceice, ligne.broutage, ligne.lomodraty];
+      vals.forEach((v, j) => setToggle(i, j, v === "Présent" ? "yes" : "no"));
+    });
+
+    setStep(4); buildRecap(); showForm("page4"); showView("view-form");
+  }
+
+  function setSelectVal(id, val) {
+    const el = document.getElementById(id); if (!el) return;
+    for (let o of el.options) { if (o.value === val) { el.value = val; return; } }
+  }
+
+  // ─── Navigation ───────────────────────────────────────────────────────────────
+  function startNewReleve() { editingId = null; resetForm(); setStep(1); showForm("page1"); showView("view-form"); }
+
+  function showForm(id) {
+    ["page1","page2","page3","page4"].forEach(p => document.getElementById(p).classList.add("hidden"));
+    document.getElementById(id).classList.remove("hidden");
+  }
+
+  function setStep(n) {
+    [1,2,3,4].forEach(i => {
+      const el = document.getElementById("s" + i);
+      el.className = "step " + (i < n ? "done" : i === n ? "active" : "pending");
+      el.textContent = i < n ? "✓" : i;
+    });
+  }
+
+  function goStep1() { setStep(1); showForm("page1"); }
+  function goStep2() {
+    if (!document.getElementById("secteur").value || !document.getElementById("site").value) {
+      alert("Veuillez sélectionner un secteur et un site."); return;
+    }
+    setStep(2); showForm("page2");
+  }
+  function goStep3() {
+    const n = parseInt(document.getElementById("nbLignes").value) || 1;
+    const snap = snapshotLignes();
+    buildLignes(n);
+    restoreLignes(snap, n);
+    setStep(3); showForm("page3");
+  }
+  function goStep4() { buildRecap(); setStep(4); showForm("page4"); }
+
+  // ─── Snapshot / restore ───────────────────────────────────────────────────────
+  function snapshotLignes() {
+    const snap = []; let i = 0;
+    while (document.getElementById("num-ligne-" + i)) {
+      snap.push({
+        numLigne:    document.getElementById("num-ligne-" + i)?.value || "",
+        pesage:      document.getElementById("pesage-"    + i)?.value || "",
+        variete:     document.getElementById("variete-"   + i)?.value || "",
+        typeculture: document.getElementById("typeculture-"+ i)?.value || "",
+        materiel:    document.getElementById("materiel-"   + i)?.value || "",
+        date:        document.getElementById("date-"      + i)?.value || "",
+        poids:       document.getElementById("poids-"     + i)?.value || "",
+        boutures:    document.getElementById("boutures-"  + i)?.value || "",
+        observation: document.getElementById("obs-"       + i)?.value || "",
+        toggles: MALADIES.map((_, j) =>
+          document.getElementById(`btn-${i}-${j}-yes`)?.classList.contains("active-yes") ? "yes" : "no"
+        )
+      }); i++;
+    }
+    return snap;
+  }
+
+  function restoreLignes(snap, n) {
+    snap.slice(0, n).forEach((s, i) => {
+      setSelectVal("num-ligne-" + i, s.numLigne);
+      setSelectVal("pesage-"    + i, s.pesage);
+      setSelectVal("variete-"    + i, s.variete);
+      setSelectVal("typeculture-"+ i, s.typeculture);
+      setSelectVal("materiel-"   + i, s.materiel);
+      document.getElementById("date-"     + i).value = s.date        || "";
+      document.getElementById("poids-"    + i).value = s.poids       || "";
+      document.getElementById("boutures-" + i).value = s.boutures    || "";
+      document.getElementById("obs-"      + i).value = s.observation || "";
+      s.toggles.forEach((v, j) => setToggle(i, j, v));
+    });
+  }
+
+  // ─── Étape 1 ──────────────────────────────────────────────────────────────────
+  function onSecteurChange() {
+    const s = document.getElementById("secteur").value;
+    const siteEl = document.getElementById("site");
+    siteEl.innerHTML = '<option value="">— Site —</option>';
+    document.getElementById("technicien").value = "";
+    document.getElementById("rtpa").value = "";
+    const zoneEl2 = document.getElementById("zone");
+    zoneEl2.innerHTML = '<option value="">— Choisir un site d\'abord —</option>';
+    zoneEl2.disabled = true;
+    document.getElementById("zone-autre").style.display = "none";
+    document.getElementById("zone-autre").value = "";
+    if (s && DATA[s]) {
+      Object.keys(DATA[s]).forEach(k => {
+        const o = document.createElement("option"); o.value = k; o.textContent = k; siteEl.appendChild(o);
+      });
+      siteEl.disabled = false;
+    } else { siteEl.disabled = true; }
+  }
+
+  function onSiteChange() {
+    const s    = document.getElementById("secteur").value;
+    const site = document.getElementById("site").value;
+    const info = (s && site && DATA[s][site]) ? DATA[s][site] : null;
+    document.getElementById("technicien").value = info ? info.technicien : "";
+    document.getElementById("rtpa").value       = info ? info.rtpa       : "";
+    // Remplir les zones depuis DATA (chargé depuis le Référentiel Sheets)
+    const zoneEl = document.getElementById("zone");
+    zoneEl.innerHTML = '<option value="">— Choisir une zone —</option>';
+    document.getElementById("zone-autre").style.display = "none";
+    document.getElementById("zone-autre").value = "";
+    const zones = (info && info.zones) ? info.zones : (ZONES_PAR_SITE[site] || []);
+    if (zones.length > 0) {
+      zones.forEach(z => {
+        const o = document.createElement("option"); o.value = z; o.textContent = z; zoneEl.appendChild(o);
+      });
+      const oAutre = document.createElement("option");
+      oAutre.value = "__autre__"; oAutre.textContent = "Autre..."; zoneEl.appendChild(oAutre);
+      zoneEl.disabled = false;
+    } else {
+      // Pas de zones prédéfinies : saisie libre directe
+      zoneEl.innerHTML = '<option value="__autre__">Saisie libre</option>';
+      zoneEl.disabled = true;
+      document.getElementById("zone-autre").style.display = "block";
+    }
+  }
+
+  function onZoneChange() {
+    const val = document.getElementById("zone").value;
+    const autreEl = document.getElementById("zone-autre");
+    if (val === "__autre__") {
+      autreEl.style.display = "block";
+      autreEl.focus();
+    } else {
+      autreEl.style.display = "none";
+      autreEl.value = "";
+    }
+  }
+
+  function getZoneValue() {
+    const sel = document.getElementById("zone").value;
+    if (sel === "__autre__") return document.getElementById("zone-autre").value.trim();
+    return sel;
+  }
+
+  function changeN(d) {
+    const el = document.getElementById("nbLignes");
+    el.value = Math.max(1, Math.min(20, parseInt(el.value || 1) + d));
+  }
+
+  // ─── Blocs lignes ─────────────────────────────────────────────────────────────
+  function buildLignes(n) {
+    const c = document.getElementById("lignes-container"); c.innerHTML = "";
+    for (let i = 0; i < n; i++) {
+      c.innerHTML += `
+      <div class="section-line">
+        <div class="section-line-header">
+          <div class="section-line-title">Ligne test ${i + 1}</div>
+          <span class="badge">Ligne ${i + 1} / ${n}</span>
+        </div>
+        <div class="row2">
+          <div class="field"><label>N° ligne test</label>
+            <select id="num-ligne-${i}">${LIGNES_NUM.map(l => `<option>${l}</option>`).join("")}</select></div>
+          <div class="field"><label>N° de pesage</label>
+            <select id="pesage-${i}"><option>P0</option><option>P1</option><option>P2</option><option>P3</option><option>P4</option><option>PR</option></select></div>
+        </div>
+        <div class="field"><label>Variété</label>
+          <select id="variete-${i}">${VARIETES.map(v => `<option>${v}</option>`).join("")}</select></div>
+        <div class="field"><label>Type de culture</label>
+          <select id="typeculture-${i}"><option value="">— Choisir —</option><option>OB</option><option>LL</option></select></div>
+        <div class="field"><label>Matériel de culture</label>
+          <select id="materiel-${i}"><option value="">— Choisir —</option><option>Corde</option><option>Tube-net</option></select></div>
+        <div class="row2">
+          <div class="field"><label>Date de pesage</label><input type="date" id="date-${i}"></div>
+          <div class="field"><label>Poids (kg)</label><input type="number" id="poids-${i}" placeholder="12.5" step="0.1" inputmode="decimal"></div>
+        </div>
+        <div class="field"><label>Nombre de boutures</label><input type="number" id="boutures-${i}" placeholder="50" inputmode="numeric"></div>
+        <hr class="divider">
+        <div class="card-title" style="margin-bottom:.75rem">Maladies / Pressions</div>
+        ${MALADIES.map((m, j) => `
+        <div class="field"><label>${m}</label>
+          <div class="toggle-group">
+            <button class="toggle-btn" id="btn-${i}-${j}-yes" onclick="setToggle(${i},${j},'yes')">Présent</button>
+            <button class="toggle-btn" id="btn-${i}-${j}-no"  onclick="setToggle(${i},${j},'no')">Absent</button>
+          </div></div>`).join("")}
+        <div class="field" style="margin-top:.25rem"><label>Observation</label>
+          <textarea id="obs-${i}" rows="3" placeholder="Commentaires..."></textarea></div>
+      </div>`;
+    }
+  }
+
+  function setToggle(i, j, val) {
+    document.getElementById(`btn-${i}-${j}-yes`).className = "toggle-btn" + (val === "yes" ? " active-yes" : "");
+    document.getElementById(`btn-${i}-${j}-no`).className  = "toggle-btn" + (val === "no"  ? " active-no"  : "");
+  }
+
+  // ─── Récap ────────────────────────────────────────────────────────────────────
+  function buildRecap() {
+    document.getElementById("r-secteur").textContent = document.getElementById("secteur").value;
+    document.getElementById("r-site").textContent    = document.getElementById("site").value;
+    document.getElementById("r-rtpa").textContent    = document.getElementById("rtpa").value    || "—";
+    document.getElementById("r-tech").textContent    = document.getElementById("technicien").value || "—";
+    document.getElementById("r-tehake").textContent  = document.getElementById("tehake").value  || "—";
+    document.getElementById("r-zone").textContent    = document.getElementById("zone").value    || "—";
+    const n = parseInt(document.getElementById("nbLignes").value) || 1;
+    const rc = document.getElementById("recap-lignes"); rc.innerHTML = "";
+    for (let i = 0; i < n; i++) {
+      const mal = MALADIES.filter((_, j) => document.getElementById(`btn-${i}-${j}-yes`)?.classList.contains("active-yes"));
+      rc.innerHTML += `
+      <div class="card" style="margin-bottom:.75rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+          <div style="font-size:14px;font-weight:500">Ligne ${i+1} — ${document.getElementById("num-ligne-"+i)?.value||""}</div>
+          <span class="badge">${document.getElementById("pesage-"+i)?.value||""}</span>
+        </div>
+        <table class="recap-table">
+          <tr><td>Variété</td><td>${document.getElementById("variete-"+i)?.value||"—"}</td></tr>
+          <tr><td>Type de culture</td><td>${document.getElementById("typeculture-"+i)?.value||"—"}</td></tr>
+          <tr><td>Matériel</td><td>${document.getElementById("materiel-"+i)?.value||"—"}</td></tr>
+          <tr><td>Date pesage</td><td>${document.getElementById("date-"+i)?.value||"—"}</td></tr>
+          <tr><td>Poids (kg)</td><td>${document.getElementById("poids-"+i)?.value||"—"}</td></tr>
+          <tr><td>Boutures</td><td>${document.getElementById("boutures-"+i)?.value||"—"}</td></tr>
+          <tr><td>Maladies</td><td>${mal.length ? mal.join(", ") : "Aucune"}</td></tr>
+          <tr><td>Observation</td><td>${document.getElementById("obs-"+i)?.value||"—"}</td></tr>
+        </table>
+      </div>`;
+    }
+  }
+
+  // ─── Collecte ─────────────────────────────────────────────────────────────────
+  function collectData() {
+    const n = parseInt(document.getElementById("nbLignes").value) || 1;
+    const lignes = [];
+    for (let i = 0; i < n; i++) {
+      lignes.push({
+        numLigne:    document.getElementById("num-ligne-"+i)?.value || "",
+        variete:     document.getElementById("variete-"+i)?.value   || "",
+        typeculture: document.getElementById("typeculture-"+i)?.value || "",
+        materiel:    document.getElementById("materiel-"+i)?.value    || "",
+        date:        document.getElementById("date-"+i)?.value      || "",
+        pesage:      document.getElementById("pesage-"+i)?.value    || "",
+        poids:       document.getElementById("poids-"+i)?.value     || "",
+        boutures:    document.getElementById("boutures-"+i)?.value  || "",
+        efa1:        document.getElementById(`btn-${i}-0-yes`)?.classList.contains("active-yes") ? "Présent" : "Absent",
+        efa2:        document.getElementById(`btn-${i}-1-yes`)?.classList.contains("active-yes") ? "Présent" : "Absent",
+        efa3:        document.getElementById(`btn-${i}-2-yes`)?.classList.contains("active-yes") ? "Présent" : "Absent",
+        efa4:        document.getElementById(`btn-${i}-3-yes`)?.classList.contains("active-yes") ? "Présent" : "Absent",
+        iceice:      document.getElementById(`btn-${i}-4-yes`)?.classList.contains("active-yes") ? "Présent" : "Absent",
+        broutage:    document.getElementById(`btn-${i}-5-yes`)?.classList.contains("active-yes") ? "Présent" : "Absent",
+        lomodraty:   document.getElementById(`btn-${i}-6-yes`)?.classList.contains("active-yes") ? "Présent" : "Absent",
+        observation: document.getElementById("obs-"+i)?.value || ""
+      });
+    }
+    return {
+      secteur: document.getElementById("secteur").value,
+      site:    document.getElementById("site").value,
+      rtpa:    document.getElementById("rtpa").value,
+      technicien: document.getElementById("technicien").value,
+      tehake:  document.getElementById("tehake").value,
+      zone:    getZoneValue(),
+      lignes
+    };
+  }
+
+  // ─── Sauvegarder (IndexedDB) ─────────────────────────────────────────────────
+  async function sauvegarder() {
+    const data   = collectData();
+    data.id      = editingId || Date.now();
+    data.savedAt = new Date().toLocaleString("fr-FR");
+    await upsertItem(data);
+    editingId = null;
+    // Demander une synchro en arrière-plan si en ligne
+    if (navigator.onLine) requestSync();
+    document.getElementById("saved-info").textContent = `${data.site} — ${data.lignes.length} ligne(s) sauvegardée(s)`;
+    showView("view-saved");
+  }
+
+  // ─── Envoyer tout (manuel) ────────────────────────────────────────────────────
+  async function sendAll() {
+    const q = await getQueue(); if (q.length === 0) return;
+    const btn = document.getElementById("btn-send-all");
+    btn.disabled = true;
+    const statusEl = document.getElementById("send-status");
+    statusEl.className = "status-bar loading";
+    statusEl.innerHTML = `<div class="spinner"></div><span>Envoi de ${q.length} relevé(s)...</span>`;
+    statusEl.classList.remove("hidden");
+    try {
+      await fetch(SHEETS_URL, {
+        method: "POST", mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ batch: q })
+      });
+      const total = q.reduce((a, r) => a + r.lignes.length, 0);
+      document.getElementById("success-info").textContent = `${q.length} relevé(s), ${total} ligne(s) envoyées`;
+      await clearDB();
+      showView("view-success");
+    } catch (err) {
+      statusEl.className = "status-bar error";
+      statusEl.innerHTML = "<span>Erreur de connexion. Réessayez.</span>";
+      btn.disabled = false;
+    }
+  }
+
+  // ─── Reset ────────────────────────────────────────────────────────────────────
+  function resetForm() {
+    document.getElementById("secteur").value    = "";
+    document.getElementById("rtpa").value       = "";
+    document.getElementById("technicien").value = "";
+    document.getElementById("tehake").value     = "";
+    const zoneReset = document.getElementById("zone");
+    zoneReset.innerHTML = '<option value="">— Choisir un site d\'abord —</option>';
+    zoneReset.disabled = true;
+    document.getElementById("zone-autre").style.display = "none";
+    document.getElementById("zone-autre").value = "";
+    document.getElementById("nbLignes").value   = 1;
+    const siteEl = document.getElementById("site");
+    siteEl.innerHTML = '<option value="">— Site —</option>';
+    siteEl.disabled  = true;
+    document.getElementById("lignes-container").innerHTML = "";
+  }
+
+  // ─── Chargement des données depuis Sheets puis cache local ───────────────────
+  async function loadSiteData() {
+    const db = await new Promise(resolve => {
+      const req = indexedDB.open("algoculture", 2);
+      req.onupgradeneeded = e => {
+        const d = e.target.result;
+        if (!d.objectStoreNames.contains("queue"))    d.createObjectStore("queue",    { keyPath: "id" });
+        if (!d.objectStoreNames.contains("sitedata")) d.createObjectStore("sitedata", { keyPath: "key" });
+      };
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror   = () => resolve(null);
+    });
+
+    // 1. Si en ligne : charger depuis l'onglet Référentiel du Google Sheet
+    if (navigator.onLine) {
+      try {
+        const resp = await fetch(SHEETS_URL + "?action=getReferentiel");
+        const json = await resp.json();
+        if (json.status === "ok" && json.data) {
+          // Parser les zones (string "A, B, C" → tableau ["A","B","C"])
+          Object.keys(json.data).forEach(s => {
+            Object.keys(json.data[s]).forEach(site => {
+              const info = json.data[s][site];
+              if (info.zones && typeof info.zones === "string") {
+                info.zones = info.zones.split(",").map(z => z.trim()).filter(z => z.length > 0);
+              } else if (!info.zones) {
+                info.zones = [];
+              }
+            });
+            DATA[s] = json.data[s];
+          });
+          // Mettre en cache pour usage hors-ligne
+          if (db) {
+            db.transaction("sitedata","readwrite")
+              .objectStore("sitedata")
+              .put({ key: "sitedata", value: JSON.stringify(json.data) });
+          }
+          return;
+        }
+      } catch(e) {
+        console.warn("Sheets inaccessible, utilisation du cache local");
+      }
+    }
+
+    // 2. Si hors-ligne ou Sheets inaccessible : cache local
+    if (db) {
+      try {
+        const saved = await new Promise(resolve => {
+          const req = db.transaction("sitedata","readonly").objectStore("sitedata").get("sitedata");
+          req.onsuccess = e => resolve(e.target.result?.value ?? null);
+          req.onerror   = () => resolve(null);
+        });
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          Object.keys(parsed).forEach(s => {
+            Object.keys(parsed[s]).forEach(site => {
+              const info = parsed[s][site];
+              if (info.zones && typeof info.zones === "string") {
+                info.zones = info.zones.split(",").map(z => z.trim()).filter(z => z.length > 0);
+              } else if (!info.zones) {
+                info.zones = [];
+              }
+            });
+            DATA[s] = parsed[s];
+          });
+          return;
+        }
+      } catch(e) {}
+    }
+
+    // 3. Dernier recours : données par défaut déjà dans DATA
+  }
+
+  // ─── Init ─────────────────────────────────────────────────────────────────────
+  updateOfflineBar();
+  loadSiteData().then(() => showQueue());
+</script>
+</body>
+</html>
