@@ -57,7 +57,7 @@ async function syncReleves() {
   if (!queue || queue.length === 0) return;
 
   try {
-    await fetch("https://script.google.com/macros/s/AKfycbw5RhQ31MB2FkSqtWMEaPGtgifdDKk7PTndUM3SZ0W5ENVvDmfin6n1cyXn3cD-IRk3GA/exec", {
+    await fetch("https://script.google.com/macros/s/AKfycbylQrJZXYcjA-uOBfTVJx7j_mj1u9a4mVHCnrNzomknbQHYggLomadrr9ovb1HmrUqZ/exec", {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "application/json" },
