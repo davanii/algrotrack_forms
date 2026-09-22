@@ -18,7 +18,7 @@
 <!-- Bannière hors-ligne -->
 <div class="offline-bar" id="offline-bar">📡 Hors-ligne — les relevés seront envoyés dès la reconnexion</div>
 <!-- Bannière synchro réussie -->
-<div class="sync-bar" id="sync-bar">✓ Relevés synchronisés avec Google Sheets</div>
+<div class="sync-bar" id="sync-bar">✓ Données envoyées avec succès</div>
 
 <div class="wrap">
   <h1>AlgoTrack – Forms</h1>
@@ -30,7 +30,7 @@
       <div id="queue-list"><div class="queue-empty">Aucun relevé sauvegardé.</div></div>
     </div>
     <button class="btn-primary" onclick="startNewReleve()">+ Nouveau relevé</button>
-    <button class="btn-success" id="btn-send-all" onclick="sendAll()" style="margin-top:8px" disabled>Tout envoyer vers Google Sheets</button>
+    <button class="btn-success" id="btn-send-all" onclick="sendAll()" style="margin-top:8px" disabled>Envoyer mes données</button>
     <div id="send-status" class="hidden"></div>
   </div>
 
@@ -149,7 +149,7 @@
       <div style="font-size:14px;color:#888;margin-bottom:1.5rem" id="saved-info"></div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn-primary" onclick="startNewReleve()">+ Nouveau relevé</button>
-        <button class="btn-secondary" style="width:100%" onclick="showQueue()">Voir la file d'attente</button>
+        <button class="btn-secondary" style="width:100%" onclick="showQueue()">Voir les données en attente d'envoi</button>
       </div>
     </div>
   </div>
@@ -160,7 +160,7 @@
       <div style="font-size:52px;margin-bottom:.75rem">✓</div>
       <div style="font-size:18px;font-weight:500;margin-bottom:.5rem">Tout envoyé !</div>
       <div style="font-size:14px;color:#888;margin-bottom:.25rem" id="success-info"></div>
-      <div style="font-size:13px;color:#aaa;margin-bottom:1.5rem">Vérifiez votre Google Sheet.</div>
+      <div style="font-size:13px;color:#aaa;margin-bottom:1.5rem">Vérifiez la BD.</div>
       <button class="btn-primary" onclick="startNewReleve()">Nouveau relevé</button>
     </div>
   </div>
