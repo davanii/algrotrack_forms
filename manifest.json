@@ -1,7 +1,7 @@
 {
-  "name": "AlgoTrack",
+  "name": "AlgoTrack-Forms",
   "short_name": "AlgoTrack",
-  "description": "Application pour la collecte de données d'algoculture",
+  "description": "Application de collecte d'AlgoTrack",
   "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
