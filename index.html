@@ -16,12 +16,18 @@
 <body>
 
 <!-- Bannière hors-ligne -->
-<div class="offline-bar" id="offline-bar">📡 Hors-ligne — les relevés seront envoyés dès la reconnexion</div>
+<div class="offline-bar" id="offline-bar">📡 Mode hors-ligne </div>
 <!-- Bannière synchro réussie -->
-<div class="sync-bar" id="sync-bar">✓ Données envoyées avec succès</div>
+<div class="sync-bar" id="sync-bar">✓ Relevés envoyés avec succès</div>
 
 <div class="wrap">
-  <h1>AlgoTrack – Forms</h1>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem">
+    <img src="data:image/png;base64,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" alt="AlgoTrack logo" style="width:44px;height:44px;object-fit:contain;flex-shrink:0">
+    <div>
+      <div style="font-size:18px;font-weight:700;color:#1a1a18;line-height:1.2">AlgoTrack</div>
+      <div style="font-size:12px;color:#888;font-weight:400;letter-spacing:.03em">Forms</div>
+    </div>
+  </div>
 
   <!-- ═══ FILE D'ATTENTE ═══════════════════════════════════════════════════ -->
   <div id="view-queue">
@@ -30,7 +36,7 @@
       <div id="queue-list"><div class="queue-empty">Aucun relevé sauvegardé.</div></div>
     </div>
     <button class="btn-primary" onclick="startNewReleve()">+ Nouveau relevé</button>
-    <button class="btn-success" id="btn-send-all" onclick="sendAll()" style="margin-top:8px" disabled>Envoyer mes données</button>
+    <button class="btn-success" id="btn-send-all" onclick="sendAll()" style="margin-top:8px" disabled>Envoyer tout</button>
     <div id="send-status" class="hidden"></div>
   </div>
 
@@ -52,7 +58,7 @@
         <div class="card-title">Identification du site</div>
         <div class="row2">
           <div class="field">
-            <label>Secteur</label>
+            <label>Secteur <span style="color:#a32d2d">*</span></label>
             <select id="secteur" onchange="onSecteurChange()">
               <option value="">— Secteur —</option>
               <option>ADK</option><option>BDA</option><option>MKN</option><option>MKC</option>
@@ -61,7 +67,7 @@
             </select>
           </div>
           <div class="field">
-            <label>Site de culture</label>
+            <label>Site de culture <span style="color:#a32d2d">*</span></label>
             <select id="site" onchange="onSiteChange()" disabled>
               <option value="">— Site —</option>
             </select>
@@ -78,13 +84,14 @@
           </div>
         </div>
         <div class="row2">
-          <div class="field"><label>N° Tehake</label><select id="tehake"><option value="">— Choisir —</option><option>THK1</option><option>THK2</option><option>THK3</option><option>THK4</option><option>THK5</option><option>THK6</option><option>THK7</option><option>THK8</option><option>THK9</option><option>THK10</option><option>THK11</option><option>THK12</option><option>THK13</option><option>THK14</option><option>THK15</option><option>THK16</option><option>THK17</option><option>THK18</option><option>THK19</option><option>THK20</option><option>THK21</option><option>THK22</option><option>THK23</option><option>THK24</option></select></div>
-          <div class="field"><label>Zone de culture</label>
+          <div class="field"><label>N° Tehake <span style="color:#a32d2d">*</span></label><select id="tehake"><option value="">— Choisir —</option><option>THK1</option><option>THK2</option><option>THK3</option><option>THK4</option><option>THK5</option><option>THK6</option><option>THK7</option><option>THK8</option><option>THK9</option><option>THK10</option><option>THK11</option><option>THK12</option><option>THK13</option><option>THK14</option><option>THK15</option><option>THK16</option><option>THK17</option><option>THK18</option><option>THK19</option><option>THK20</option><option>THK21</option><option>THK22</option><option>THK23</option><option>THK24</option></select></div>
+          <div class="field"><label>Zone de culture <span style="color:#a32d2d">*</span></label>
           <select id="zone" disabled onchange="onZoneChange()"><option value="">— Choisir un site d'abord —</option></select>
           <input type="text" id="zone-autre" placeholder="Précisez la zone..." style="margin-top:6px;display:none">
         </div>
         </div>
       </div>
+      <p style="font-size:11px;color:#a32d2d;margin-top:.5rem">* Champs obligatoires</p>
       <div class="nav-btns">
         <button class="btn-secondary" onclick="showQueue()">← Retour</button>
         <button class="btn-primary" style="flex:1" onclick="goStep2()">Continuer →</button>
@@ -149,7 +156,7 @@
       <div style="font-size:14px;color:#888;margin-bottom:1.5rem" id="saved-info"></div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn-primary" onclick="startNewReleve()">+ Nouveau relevé</button>
-        <button class="btn-secondary" style="width:100%" onclick="showQueue()">Voir les données en attente d'envoi</button>
+        <button class="btn-secondary" style="width:100%" onclick="showQueue()">Voir la file d'attente</button>
       </div>
     </div>
   </div>
@@ -160,14 +167,13 @@
       <div style="font-size:52px;margin-bottom:.75rem">✓</div>
       <div style="font-size:18px;font-weight:500;margin-bottom:.5rem">Tout envoyé !</div>
       <div style="font-size:14px;color:#888;margin-bottom:.25rem" id="success-info"></div>
-      <div style="font-size:13px;color:#aaa;margin-bottom:1.5rem">Vérifiez la BD.</div>
+      <div style="font-size:13px;color:#aaa;margin-bottom:1.5rem">Vérifiez votre Google Sheet.</div>
       <button class="btn-primary" onclick="startNewReleve()">Nouveau relevé</button>
     </div>
   </div>
 </div>
 
 <script>
-  
   const SHEETS_URL  = "https://script.google.com/macros/s/AKfycbylQrJZXYcjA-uOBfTVJx7j_mj1u9a4mVHCnrNzomknbQHYggLomadrr9ovb1HmrUqZ/exec";
   const SYNC_TAG    = "sync-releves";
   let editingId     = null;
@@ -175,7 +181,6 @@
   // ─── Données ──────────────────────────────────────────────────────────────────
   const DATA = {
     // Données chargées dynamiquement depuis l'onglet Référentiel de Google Sheets
-    // Ce bloc sert de fallback si le Sheet est inaccessible et qu'il n'y a pas de cache
     "ADK": {}, "BDA": {}, "MKN": {}, "MKC": {}, "MKS": {},
     "BTL": {}, "BRB": {}, "OLY": {}, "TPS": {}, "LNT": {}, "KMT": {}
   };
@@ -392,9 +397,16 @@
 
   function goStep1() { setStep(1); showForm("page1"); }
   function goStep2() {
-    if (!document.getElementById("secteur").value || !document.getElementById("site").value) {
-      alert("Veuillez sélectionner un secteur et un site."); return;
-    }
+    const secteur  = document.getElementById("secteur").value;
+    const site     = document.getElementById("site").value;
+    const tehake   = document.getElementById("tehake").value;
+    const zone     = getZoneValue();
+
+    if (!secteur)  { alert("Veuillez sélectionner un secteur.");       return; }
+    if (!site)     { alert("Veuillez sélectionner un site.");           return; }
+    if (!tehake)   { alert("Veuillez sélectionner un N° Tehake.");      return; }
+    if (!zone)     { alert("Veuillez saisir ou sélectionner une zone."); return; }
+
     setStep(2); showForm("page2");
   }
   function goStep3() {
@@ -404,7 +416,39 @@
     restoreLignes(snap, n);
     setStep(3); showForm("page3");
   }
-  function goStep4() { buildRecap(); setStep(4); showForm("page4"); }
+  function goStep4() {
+    const n = parseInt(document.getElementById("nbLignes").value) || 1;
+    const errors = [];
+
+    for (let i = 0; i < n; i++) {
+      const prefix = `Ligne ${i+1}`;
+      if (!document.getElementById("num-ligne-"+i)?.value)    errors.push(`${prefix} : N° de ligne test manquant`);
+      if (!document.getElementById("pesage-"+i)?.value)       errors.push(`${prefix} : N° de pesage manquant`);
+      if (!document.getElementById("variete-"+i)?.value)      errors.push(`${prefix} : Variété manquante`);
+      if (!document.getElementById("typeculture-"+i)?.value)  errors.push(`${prefix} : Type de culture manquant`);
+      if (!document.getElementById("materiel-"+i)?.value)     errors.push(`${prefix} : Matériel manquant`);
+      if (!document.getElementById("date-"+i)?.value)         errors.push(`${prefix} : Date de pesage manquante`);
+      if (!document.getElementById("poids-"+i)?.value)        errors.push(`${prefix} : Poids manquant`);
+      if (!document.getElementById("boutures-"+i)?.value)     errors.push(`${prefix} : Nombre de boutures manquant`);
+
+      // Vérifier que tous les toggles maladies ont une valeur
+      const nbMaladies = 7;
+      for (let j = 0; j < nbMaladies; j++) {
+        const yes = document.getElementById(`btn-${i}-${j}-yes`);
+        const no  = document.getElementById(`btn-${i}-${j}-no`);
+        if (!yes?.classList.contains("active-yes") && !no?.classList.contains("active-no")) {
+          errors.push(`${prefix} : ${MALADIES[j]} non renseigné`);
+        }
+      }
+    }
+
+    if (errors.length > 0) {
+      alert("Champs obligatoires manquants :\n\n" + errors.join("\n"));
+      return;
+    }
+
+    buildRecap(); setStep(4); showForm("page4");
+  }
 
   // ─── Snapshot / restore ───────────────────────────────────────────────────────
   function snapshotLignes() {
@@ -524,22 +568,22 @@
           <span class="badge">Ligne ${i + 1} / ${n}</span>
         </div>
         <div class="row2">
-          <div class="field"><label>N° ligne test</label>
+          <div class="field"><label>N° ligne test <span style="color:#a32d2d">*</span></label>
             <select id="num-ligne-${i}">${LIGNES_NUM.map(l => `<option>${l}</option>`).join("")}</select></div>
-          <div class="field"><label>N° de pesage</label>
+          <div class="field"><label>N° de pesage <span style="color:#a32d2d">*</span></label>
             <select id="pesage-${i}"><option>P0</option><option>P1</option><option>P2</option><option>P3</option><option>P4</option><option>PR</option></select></div>
         </div>
-        <div class="field"><label>Variété</label>
+        <div class="field"><label>Variété <span style="color:#a32d2d">*</span></label>
           <select id="variete-${i}">${VARIETES.map(v => `<option>${v}</option>`).join("")}</select></div>
-        <div class="field"><label>Type de culture</label>
+        <div class="field"><label>Type de culture <span style="color:#a32d2d">*</span></label>
           <select id="typeculture-${i}"><option value="">— Choisir —</option><option>OB</option><option>LL</option></select></div>
-        <div class="field"><label>Matériel de culture</label>
+        <div class="field"><label>Matériel de culture <span style="color:#a32d2d">*</span></label>
           <select id="materiel-${i}"><option value="">— Choisir —</option><option>Corde</option><option>Tube-net</option></select></div>
         <div class="row2">
-          <div class="field"><label>Date de pesage</label><input type="date" id="date-${i}"></div>
-          <div class="field"><label>Poids (kg)</label><input type="number" id="poids-${i}" placeholder="12.5" step="0.1" inputmode="decimal"></div>
+          <div class="field"><label>Date de pesage <span style="color:#a32d2d">*</span></label><input type="date" id="date-${i}"></div>
+          <div class="field"><label>Poids (kg) <span style="color:#a32d2d">*</span></label><input type="number" id="poids-${i}" placeholder="12.5" step="0.1" inputmode="decimal"></div>
         </div>
-        <div class="field"><label>Nombre de boutures</label><input type="number" id="boutures-${i}" placeholder="50" inputmode="numeric"></div>
+        <div class="field"><label>Nombre de boutures <span style="color:#a32d2d">*</span></label><input type="number" id="boutures-${i}" placeholder="50" inputmode="numeric"></div>
         <hr class="divider">
         <div class="card-title" style="margin-bottom:.75rem">Maladies / Pressions</div>
         ${MALADIES.map((m, j) => `
