@@ -1,4 +1,4 @@
-const CACHE_NAME = "algoculture-v3";
+const CACHE_NAME = "algoculture-v3.1";
 const SYNC_TAG   = "sync-releves";
 
 // Fichiers à mettre en cache pour le mode hors-ligne
