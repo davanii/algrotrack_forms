@@ -1,4 +1,4 @@
-const CACHE_NAME = "algoculture-v4";
+const CACHE_NAME = "algoculture-v4.1";
 const SYNC_TAG   = "sync-releves";
 
 // Fichiers à mettre en cache pour le mode hors-ligne
@@ -57,7 +57,7 @@ async function syncReleves() {
   if (!queue || queue.length === 0) return;
 
   try {
-    await fetch("https://script.google.com/macros/s/AKfycbylQrJZXYcjA-uOBfTVJx7j_mj1u9a4mVHCnrNzomknbQHYggLomadrr9ovb1HmrUqZ/exec", {
+    await fetch("https://script.google.com/macros/s/AKfycby_lYeOskEzewXtpI7vK-0blEKfH4OvbOApM5p07xGzeAUGnBUEodQ-Q0_MvJXb_win/exec", {
       method: "POST",
       mode: "no-cors",
       headers: { "Content-Type": "application/json" },
