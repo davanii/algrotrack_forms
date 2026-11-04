@@ -10,15 +10,15 @@
   <meta name="apple-mobile-web-app-title" content="Algoculture">
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="./icon-192.png">
-  <title>AlgoTrack – Forms</title>
+  <title>AlgoTrack - Forms</title>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
 <!-- Bannière hors-ligne -->
-<div class="offline-bar" id="offline-bar">📡 Mode hors-ligne </div>
+<div class="offline-bar" id="offline-bar">📡 Hors-ligne — les relevés seront envoyés dès la reconnexion</div>
 <!-- Bannière synchro réussie -->
-<div class="sync-bar" id="sync-bar">✓ Relevés envoyés avec succès</div>
+<div class="sync-bar" id="sync-bar">✓ Relevés synchronisés avec succès</div>
 
 <div class="wrap">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem">
@@ -36,7 +36,7 @@
       <div id="queue-list"><div class="queue-empty">Aucun relevé sauvegardé.</div></div>
     </div>
     <button class="btn-primary" onclick="startNewReleve()">+ Nouveau relevé</button>
-    <button class="btn-success" id="btn-send-all" onclick="sendAll()" style="margin-top:8px" disabled>Envoyer tout</button>
+    <button class="btn-success" id="btn-send-all" onclick="sendAll()" style="margin-top:8px" disabled>Tout envoyer vers Google Sheets</button>
     <div id="send-status" class="hidden"></div>
   </div>
 
@@ -79,17 +79,12 @@
             <input type="text" id="rtpa" readonly placeholder="—">
           </div>
           <div class="field">
-            <label>Technicien <span style="font-size:11px;color:#aaa">(auto)</span></label>
+            <label>Technicien <span id="tech-hint" style="font-size:11px;color:#aaa">(auto)</span></label>
             <input type="text" id="technicien" readonly placeholder="—">
+            <select id="technicien-select" style="display:none"></select>
           </div>
         </div>
-        <div class="row2">
-          <div class="field"><label>N° Tehake <span style="color:#a32d2d">*</span></label><select id="tehake"><option value="">— Choisir —</option><option>THK1</option><option>THK2</option><option>THK3</option><option>THK4</option><option>THK5</option><option>THK6</option><option>THK7</option><option>THK8</option><option>THK9</option><option>THK10</option><option>THK11</option><option>THK12</option><option>THK13</option><option>THK14</option><option>THK15</option><option>THK16</option><option>THK17</option><option>THK18</option><option>THK19</option><option>THK20</option><option>THK21</option><option>THK22</option><option>THK23</option><option>THK24</option></select></div>
-          <div class="field"><label>Zone de culture <span style="color:#a32d2d">*</span></label>
-          <select id="zone" disabled onchange="onZoneChange()"><option value="">— Choisir un site d'abord —</option></select>
-          <input type="text" id="zone-autre" placeholder="Précisez la zone..." style="margin-top:6px;display:none">
-        </div>
-        </div>
+        <div class="field"><label>N° Tehake <span style="color:#a32d2d">*</span></label><select id="tehake"><option value="">— Choisir —</option><option>THK1</option><option>THK2</option><option>THK3</option><option>THK4</option><option>THK5</option><option>THK6</option><option>THK7</option><option>THK8</option><option>THK9</option><option>THK10</option><option>THK11</option><option>THK12</option><option>THK13</option><option>THK14</option><option>THK15</option><option>THK16</option><option>THK17</option><option>THK18</option><option>THK19</option><option>THK20</option><option>THK21</option><option>THK22</option><option>THK23</option><option>THK24</option></select></div>
       </div>
       <p style="font-size:11px;color:#a32d2d;margin-top:.5rem">* Champs obligatoires</p>
       <div class="nav-btns">
@@ -137,7 +132,6 @@
           <tr><td>RTPA</td><td id="r-rtpa"></td></tr>
           <tr><td>Technicien</td><td id="r-tech"></td></tr>
           <tr><td>Tehake</td><td id="r-tehake"></td></tr>
-          <tr><td>Zone</td><td id="r-zone"></td></tr>
         </table>
       </div>
       <div id="recap-lignes"></div>
@@ -177,20 +171,69 @@
   const SHEETS_URL  = "https://script.google.com/macros/s/AKfycbylQrJZXYcjA-uOBfTVJx7j_mj1u9a4mVHCnrNzomknbQHYggLomadrr9ovb1HmrUqZ/exec";
   const SYNC_TAG    = "sync-releves";
   let editingId     = null;
+  let lignesSite    = "";   // site pour lequel les blocs lignes ont été construits
 
   // ─── Données ──────────────────────────────────────────────────────────────────
   const DATA = {
     // Données chargées dynamiquement depuis l'onglet Référentiel de Google Sheets
+    // Ce bloc sert de fallback si le Sheet est inaccessible et qu'il n'y a pas de cache
     "ADK": {}, "BDA": {}, "MKN": {}, "MKC": {}, "MKS": {},
     "BTL": {}, "BRB": {}, "OLY": {}, "TPS": {}, "LNT": {}, "KMT": {}
   };
 
-  const LIGNES_NUM = ["LT1","LT 1F","LT2","LT 2F","LT3","LT 3F"];
+  const LIGNES_NUM = ["LT1","LT2","LT3"];
   const VARIETES   = ["Sacol (Cottonii)","Tambalang (Cottonii)","Spinosum"];
   const MALADIES   = ["EFA stade 1","EFA stade 2","EFA stade 3","EFA stade 4","Ice-Ice","Broutage","Lomodraty"];
 
   const ZONES_PAR_SITE = {
-    // Zones chargées dynamiquement depuis l'onglet Référentiel de Google Sheets (colonne E)
+    // Fallback local si Google Sheets inaccessible
+    "AMBOLIMOKE":    ["Sud", "Centre", "Nord", "Nord-ouest"],
+    "BELAVENOKE":    ["Sud", "Est", "Ouest"],
+    "ANTSATSAMOROY": ["Ambalazanga", "Ankarandoha", "Andranognosy", "Betsiboko", "Mitata"],
+    "TSERANANGANGY": ["Nord est", "Sud est", "Ouest"],
+    "AMPASILAVA":    ["Nord", "Sud", "Ouest"],
+    "AMPASIMARA":    ["Madiorano", "Andovoky", "Beriatse", "Ambany tana", "Sud"],
+    "AMPENGOKE":     ["Sud", "Nord", "Ambavarano", "Ampampa", "Ampasy"],
+    "VATOAVO":       ["Ambatofamalaha", "Ambory", "Ampasignena", "Soarano", "Antsapea", "Bevahoho", "Nosim-bivy"],
+    "LAMBOARAY":     ["Sud", "Nord", "Ambavarano", "Ampampa", "Ampasy", "Ambany tanana LBR"],
+    "ANKINDRANOKE":  ["Tsakalafo", "Nord", "Ambatovato", "Ambory", "Betomboe", "Sud", "Ambatofamalaha"],
+    "AGNOLIGNOLEY":  ["Ambany tana", "Ampasy", "Ambatofamalaha", "Ambory"],
+    "TAMPOLOVE":     ["Ambany tana", "Ambanin-dolo", "Beforatse", "Ambory"],
+    "ANTSEPOKE":     ["Ambanintana", "Antsepoke"],
+    "AMBOHIMBAO":    ["Sud", "Centre", "Nord"],
+    "BEANGOLO":      ["Andama nord", "Andama sud", "Ampasifoty", "Ambolifasy"],
+    "KITAMBANA":     ["Antandeobe", "Ampasifoty"],
+    "AMBATOMILO":    ["Ambolifasy", "Ambatorasidy", "Tearene", "Amboaboake", "Bepipa", "Antamboho", "Ambatovaky"],
+    "ANDRAVONA":     ["Sud", "Nord", "Ouest"],
+    "BEKODOY":       ["Sud", "Nord", "Centre", "Ouest"],
+    "SALARY II":     ["Sud", "Centre Nord"],
+    "SALARY I":      ["Sud", "Centre", "Nord"],
+    "ANKARAMIFOKA":  ["Sud", "Centre", "Nord"],
+    "TSANDAMBA":     ["Sud", "Centre", "Nord"],
+    "ANDREVO":       ["Sud", "Centre", "Nord"],
+    "IFATY":         ["Sud", "Centre", "Nord", "OB centre"],
+    "AMBALABORY":    ["Zone 1", "Zone 2", "Zone 3", "Zone 4"],
+    "BERAVY":        ["Sud", "Nord"],
+    "ANKILIBE":      ["Sud", "Centre", "Nord"],
+    "KODEOREJELYE":  ["Centre"],
+    "ANTANANDREVIKY":["Sud", "Centre", "Nord"],
+    "SARODRANO":     ["OB Sud", "Centre", "Nord", "LL1", "LL2"],
+    "ANAKAO":        ["Antanimainy", "Ankelihara", "Antsoropasy"],
+    "ANKILIMIOVAY":  ["Ouest", "Est", "Nord"],
+    "ANDRANGY":      ["OB Andrangy"],
+    "MAROMENE":      ["Centre"],
+    "BEFASY":        ["Sud", "Nord"],
+    "BEHINTA":       ["Sud", "Centre", "Nord"],
+    "BEHELOKE":      ["Sud", "Centre", "Nord"],
+    "BESAMBAY":      ["Sud", "Nord"],
+    "LANIRANO":      ["Sud", "Nord"],
+    "ANTSAKOA":      ["Ankarenahitre"],
+    "ANTSOKOROKO":   ["Sud-ouest", "Nord"],
+    "AMBOHIMBOLA":   ["Sud", "Nord"],
+    "MENAKY":        ["Andramano", "Ambalavato"],
+    "BELO SUR MER":  ["Ampampa", "Ampanajaria", "Bedangiry", "Ambatomivala"],
+    "BELANORA":      ["Sud", "Nord"],
+    "MANAHY":        ["Sud", "Nord"],
   };
 
 
@@ -337,27 +380,15 @@
     document.getElementById("secteur").value   = releve.secteur;
     onSecteurChange();
     document.getElementById("site").value       = releve.site;
+    onSiteChange();   // recharge la liste des techniciens du site
     document.getElementById("rtpa").value       = releve.rtpa || "";
-    document.getElementById("technicien").value = releve.technicien || "";
+    setTechnicienValue(releve.technicien || "");
     document.getElementById("tehake").value = releve.tehake || "";
-    // Restaurer la zone (liste ou saisie libre)
-    const zoneEditEl = document.getElementById("zone");
-    const zoneAutreEl = document.getElementById("zone-autre");
-    const zonesDispos = Array.from(zoneEditEl.options).map(o => o.value);
-    if (releve.zone && !zonesDispos.includes(releve.zone)) {
-      // La zone sauvegardée n'est pas dans la liste → "Autre..."
-      zoneEditEl.value = "__autre__";
-      zoneAutreEl.style.display = "block";
-      zoneAutreEl.value = releve.zone;
-    } else {
-      zoneEditEl.value = releve.zone || "";
-      zoneAutreEl.style.display = "none";
-      zoneAutreEl.value = "";
-    }
     document.getElementById("nbLignes").value   = releve.lignes.length;
 
     buildLignes(releve.lignes.length);
     releve.lignes.forEach((ligne, i) => {
+      setZoneLigne(i, ligne.zone || releve.zone);   // releve.zone = anciens relevés
       setSelectVal("num-ligne-" + i, ligne.numLigne);
       setSelectVal("pesage-"    + i, ligne.pesage);
       setSelectVal("variete-"    + i, ligne.variete);
@@ -400,20 +431,21 @@
     const secteur  = document.getElementById("secteur").value;
     const site     = document.getElementById("site").value;
     const tehake   = document.getElementById("tehake").value;
-    const zone     = getZoneValue();
+    const techSel  = document.getElementById("technicien-select");
 
     if (!secteur)  { alert("Veuillez sélectionner un secteur.");       return; }
     if (!site)     { alert("Veuillez sélectionner un site.");           return; }
     if (!tehake)   { alert("Veuillez sélectionner un N° Tehake.");      return; }
-    if (!zone)     { alert("Veuillez saisir ou sélectionner une zone."); return; }
+    if (techSel.style.display !== "none" && !techSel.value) { alert("Veuillez choisir le technicien."); return; }
 
     setStep(2); showForm("page2");
   }
   function goStep3() {
     const n = parseInt(document.getElementById("nbLignes").value) || 1;
     const snap = snapshotLignes();
+    const memeSite = (lignesSite === document.getElementById("site").value);
     buildLignes(n);
-    restoreLignes(snap, n);
+    restoreLignes(snap, n, memeSite);
     setStep(3); showForm("page3");
   }
   function goStep4() {
@@ -422,6 +454,7 @@
 
     for (let i = 0; i < n; i++) {
       const prefix = `Ligne ${i+1}`;
+      if (!getZoneLigne(i))                                   errors.push(`${prefix} : Zone de culture manquante`);
       if (!document.getElementById("num-ligne-"+i)?.value)    errors.push(`${prefix} : N° de ligne test manquant`);
       if (!document.getElementById("pesage-"+i)?.value)       errors.push(`${prefix} : N° de pesage manquant`);
       if (!document.getElementById("variete-"+i)?.value)      errors.push(`${prefix} : Variété manquante`);
@@ -455,6 +488,7 @@
     const snap = []; let i = 0;
     while (document.getElementById("num-ligne-" + i)) {
       snap.push({
+        zone:        getZoneLigne(i),
         numLigne:    document.getElementById("num-ligne-" + i)?.value || "",
         pesage:      document.getElementById("pesage-"    + i)?.value || "",
         variete:     document.getElementById("variete-"   + i)?.value || "",
@@ -472,8 +506,9 @@
     return snap;
   }
 
-  function restoreLignes(snap, n) {
+  function restoreLignes(snap, n, restoreZone = true) {
     snap.slice(0, n).forEach((s, i) => {
+      if (restoreZone) setZoneLigne(i, s.zone);
       setSelectVal("num-ligne-" + i, s.numLigne);
       setSelectVal("pesage-"    + i, s.pesage);
       setSelectVal("variete-"    + i, s.variete);
@@ -492,13 +527,8 @@
     const s = document.getElementById("secteur").value;
     const siteEl = document.getElementById("site");
     siteEl.innerHTML = '<option value="">— Site —</option>';
-    document.getElementById("technicien").value = "";
+    resetTechnicien();
     document.getElementById("rtpa").value = "";
-    const zoneEl2 = document.getElementById("zone");
-    zoneEl2.innerHTML = '<option value="">— Choisir un site d\'abord —</option>';
-    zoneEl2.disabled = true;
-    document.getElementById("zone-autre").style.display = "none";
-    document.getElementById("zone-autre").value = "";
     if (s && DATA[s]) {
       Object.keys(DATA[s]).forEach(k => {
         const o = document.createElement("option"); o.value = k; o.textContent = k; siteEl.appendChild(o);
@@ -510,46 +540,119 @@
   function onSiteChange() {
     const s    = document.getElementById("secteur").value;
     const site = document.getElementById("site").value;
-    const info = (s && site && DATA[s][site]) ? DATA[s][site] : null;
-    document.getElementById("technicien").value = info ? info.technicien : "";
-    document.getElementById("rtpa").value       = info ? info.rtpa       : "";
-    // Remplir les zones depuis DATA (chargé depuis le Référentiel Sheets)
-    const zoneEl = document.getElementById("zone");
-    zoneEl.innerHTML = '<option value="">— Choisir une zone —</option>';
-    document.getElementById("zone-autre").style.display = "none";
-    document.getElementById("zone-autre").value = "";
-    const zones = (info && info.zones) ? info.zones : (ZONES_PAR_SITE[site] || []);
-    if (zones.length > 0) {
-      zones.forEach(z => {
-        const o = document.createElement("option"); o.value = z; o.textContent = z; zoneEl.appendChild(o);
+    const info = (s && site && DATA[s] && DATA[s][site]) ? DATA[s][site] : null;
+    document.getElementById("rtpa").value = info ? info.rtpa : "";
+    setTechniciens(info ? info.technicien : "");
+  }
+
+  // ─── Technicien : champ automatique, ou liste si le site en a plusieurs ──────
+  function setTechniciens(raw) {
+    const list = String(raw || "").split(",").map(t => t.trim()).filter(Boolean);
+    const inp  = document.getElementById("technicien");
+    const sel  = document.getElementById("technicien-select");
+    const hint = document.getElementById("tech-hint");
+    if (list.length > 1) {
+      sel.innerHTML = "";
+      const o0 = document.createElement("option");
+      o0.value = ""; o0.textContent = "— Choisir le technicien —"; sel.appendChild(o0);
+      list.forEach(t => {
+        const o = document.createElement("option"); o.value = t; o.textContent = t; sel.appendChild(o);
       });
-      const oAutre = document.createElement("option");
-      oAutre.value = "__autre__"; oAutre.textContent = "Autre..."; zoneEl.appendChild(oAutre);
-      zoneEl.disabled = false;
+      sel.style.display = "block";
+      inp.style.display = "none";
+      inp.value = "";
+      hint.textContent = "(choisir)";
+      hint.style.color = "#a32d2d";
     } else {
-      // Pas de zones prédéfinies : saisie libre directe
-      zoneEl.innerHTML = '<option value="__autre__">Saisie libre</option>';
-      zoneEl.disabled = true;
-      document.getElementById("zone-autre").style.display = "block";
+      resetTechnicien();
+      inp.value = list[0] || "";
     }
   }
 
-  function onZoneChange() {
-    const val = document.getElementById("zone").value;
-    const autreEl = document.getElementById("zone-autre");
-    if (val === "__autre__") {
-      autreEl.style.display = "block";
-      autreEl.focus();
+  function resetTechnicien() {
+    const sel  = document.getElementById("technicien-select");
+    const inp  = document.getElementById("technicien");
+    const hint = document.getElementById("tech-hint");
+    sel.style.display = "none"; sel.innerHTML = "";
+    inp.style.display = "";     inp.value = "";
+    hint.textContent = "(auto)"; hint.style.color = "#aaa";
+  }
+
+  function getTechnicienValue() {
+    const sel = document.getElementById("technicien-select");
+    return sel.style.display !== "none" ? sel.value : document.getElementById("technicien").value;
+  }
+
+  function setTechnicienValue(val) {
+    const sel = document.getElementById("technicien-select");
+    if (sel.style.display !== "none") {
+      // Si le nom sauvegardé n'est plus dans la liste, on l'ajoute pour ne rien perdre
+      if (val && !Array.from(sel.options).some(o => o.value === val)) {
+        const o = document.createElement("option"); o.value = val; o.textContent = val; sel.appendChild(o);
+      }
+      sel.value = val || "";
     } else {
-      autreEl.style.display = "none";
-      autreEl.value = "";
+      document.getElementById("technicien").value = val || "";
     }
   }
 
-  function getZoneValue() {
-    const sel = document.getElementById("zone").value;
-    if (sel === "__autre__") return document.getElementById("zone-autre").value.trim();
-    return sel;
+  // ─── Zone de culture : un champ par ligne test ───────────────────────────────
+  function escHtml(str) {
+    return String(str ?? "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function getZonesSite() {
+    const s    = document.getElementById("secteur").value;
+    const site = document.getElementById("site").value;
+    const info = (s && site && DATA[s] && DATA[s][site]) ? DATA[s][site] : null;
+    return (info && info.zones) ? info.zones : (ZONES_PAR_SITE[site] || []);
+  }
+
+  function zoneFieldHtml(i) {
+    const zones = getZonesSite();
+    let opts, disabled = "", autreDisplay = "none";
+    if (zones.length > 0) {
+      opts = '<option value="">— Choisir une zone —</option>' +
+             zones.map(z => `<option value="${escHtml(z)}">${escHtml(z)}</option>`).join("") +
+             '<option value="__autre__">Autre...</option>';
+    } else {
+      // Aucune zone définie pour ce site : saisie libre directe
+      opts = '<option value="__autre__">Saisie libre</option>';
+      disabled = " disabled"; autreDisplay = "block";
+    }
+    return `<div class="field"><label>Zone de culture <span style="color:#a32d2d">*</span></label>
+          <select id="zone-${i}"${disabled} onchange="onZoneChange(${i})">${opts}</select>
+          <input type="text" id="zone-autre-${i}" placeholder="Précisez la zone..." style="margin-top:6px;display:${autreDisplay}">
+        </div>`;
+  }
+
+  function onZoneChange(i) {
+    const autre = document.getElementById("zone-autre-" + i);
+    if (document.getElementById("zone-" + i).value === "__autre__") {
+      autre.style.display = "block"; autre.focus();
+    } else {
+      autre.style.display = "none"; autre.value = "";
+    }
+  }
+
+  function getZoneLigne(i) {
+    const sel = document.getElementById("zone-" + i);
+    if (!sel) return "";
+    if (sel.value === "__autre__") return (document.getElementById("zone-autre-" + i)?.value || "").trim();
+    return sel.value;
+  }
+
+  function setZoneLigne(i, val) {
+    const sel   = document.getElementById("zone-" + i);
+    const autre = document.getElementById("zone-autre-" + i);
+    if (!sel || !autre || !val) return;
+    const dispos = Array.from(sel.options).map(o => o.value);
+    if (dispos.includes(val)) {
+      sel.value = val; autre.style.display = "none"; autre.value = "";
+    } else {
+      // Zone saisie librement (ou absente de la liste) → "Autre..." + texte
+      sel.value = "__autre__"; autre.style.display = "block"; autre.value = val;
+    }
   }
 
   function changeN(d) {
@@ -560,6 +663,7 @@
   // ─── Blocs lignes ─────────────────────────────────────────────────────────────
   function buildLignes(n) {
     const c = document.getElementById("lignes-container"); c.innerHTML = "";
+    lignesSite = document.getElementById("site").value;
     for (let i = 0; i < n; i++) {
       c.innerHTML += `
       <div class="section-line">
@@ -567,6 +671,7 @@
           <div class="section-line-title">Ligne test ${i + 1}</div>
           <span class="badge">Ligne ${i + 1} / ${n}</span>
         </div>
+        ${zoneFieldHtml(i)}
         <div class="row2">
           <div class="field"><label>N° ligne test <span style="color:#a32d2d">*</span></label>
             <select id="num-ligne-${i}">${LIGNES_NUM.map(l => `<option>${l}</option>`).join("")}</select></div>
@@ -608,9 +713,8 @@
     document.getElementById("r-secteur").textContent = document.getElementById("secteur").value;
     document.getElementById("r-site").textContent    = document.getElementById("site").value;
     document.getElementById("r-rtpa").textContent    = document.getElementById("rtpa").value    || "—";
-    document.getElementById("r-tech").textContent    = document.getElementById("technicien").value || "—";
+    document.getElementById("r-tech").textContent    = getTechnicienValue() || "—";
     document.getElementById("r-tehake").textContent  = document.getElementById("tehake").value  || "—";
-    document.getElementById("r-zone").textContent    = document.getElementById("zone").value    || "—";
     const n = parseInt(document.getElementById("nbLignes").value) || 1;
     const rc = document.getElementById("recap-lignes"); rc.innerHTML = "";
     for (let i = 0; i < n; i++) {
@@ -622,6 +726,7 @@
           <span class="badge">${document.getElementById("pesage-"+i)?.value||""}</span>
         </div>
         <table class="recap-table">
+          <tr><td>Zone</td><td>${getZoneLigne(i)||"—"}</td></tr>
           <tr><td>Variété</td><td>${document.getElementById("variete-"+i)?.value||"—"}</td></tr>
           <tr><td>Type de culture</td><td>${document.getElementById("typeculture-"+i)?.value||"—"}</td></tr>
           <tr><td>Matériel</td><td>${document.getElementById("materiel-"+i)?.value||"—"}</td></tr>
@@ -641,6 +746,7 @@
     const lignes = [];
     for (let i = 0; i < n; i++) {
       lignes.push({
+        zone:        getZoneLigne(i),
         numLigne:    document.getElementById("num-ligne-"+i)?.value || "",
         variete:     document.getElementById("variete-"+i)?.value   || "",
         typeculture: document.getElementById("typeculture-"+i)?.value || "",
@@ -663,9 +769,8 @@
       secteur: document.getElementById("secteur").value,
       site:    document.getElementById("site").value,
       rtpa:    document.getElementById("rtpa").value,
-      technicien: document.getElementById("technicien").value,
+      technicien: getTechnicienValue(),
       tehake:  document.getElementById("tehake").value,
-      zone:    getZoneValue(),
       lignes
     };
   }
@@ -713,13 +818,8 @@
   function resetForm() {
     document.getElementById("secteur").value    = "";
     document.getElementById("rtpa").value       = "";
-    document.getElementById("technicien").value = "";
+    resetTechnicien();
     document.getElementById("tehake").value     = "";
-    const zoneReset = document.getElementById("zone");
-    zoneReset.innerHTML = '<option value="">— Choisir un site d\'abord —</option>';
-    zoneReset.disabled = true;
-    document.getElementById("zone-autre").style.display = "none";
-    document.getElementById("zone-autre").value = "";
     document.getElementById("nbLignes").value   = 1;
     const siteEl = document.getElementById("site");
     siteEl.innerHTML = '<option value="">— Site —</option>';
