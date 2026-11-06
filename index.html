@@ -18,7 +18,7 @@
 <!-- Bannière hors-ligne -->
 <div class="offline-bar" id="offline-bar">📡 Hors-ligne — les relevés seront envoyés dès la reconnexion</div>
 <!-- Bannière synchro réussie -->
-<div class="sync-bar" id="sync-bar">✓ Relevés synchronisés avec succès</div>
+<div class="sync-bar" id="sync-bar">✓ Relevés synchronisés avec Google Sheets</div>
 
 <div class="wrap">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem">
@@ -168,7 +168,7 @@
 </div>
 
 <script>
-  const SHEETS_URL  = "https://script.google.com/macros/s/AKfycby_lYeOskEzewXtpI7vK-0blEKfH4OvbOApM5p07xGzeAUGnBUEodQ-Q0_MvJXb_win/exec";
+  const SHEETS_URL  = "https://script.google.com/macros/s/AKfycbyUltGVgNNB7xwrmRwqjlQ9BS1-0fdtrexvQ_XCTIGoOzPHov-zgn45Mc0eUZElaX6-/exec";
   const SYNC_TAG    = "sync-releves";
   let editingId     = null;
   let lignesSite    = "";   // site pour lequel les blocs lignes ont été construits
@@ -678,7 +678,7 @@
           <div class="field"><label>N° de pesage <span style="color:#a32d2d">*</span></label>
             <select id="pesage-${i}"><option>P0</option><option>P1</option><option>P2</option><option>P3</option><option>P4</option><option>PR</option></select></div>
         </div>
-        <div class="field"><label>Variété <span style="color:#a32d2d">*</span></label>
+        <div class="field"><label>Espèce <span style="color:#a32d2d">*</span></label>
           <select id="variete-${i}">${VARIETES.map(v => `<option>${v}</option>`).join("")}</select></div>
         <div class="field"><label>Type de culture <span style="color:#a32d2d">*</span></label>
           <select id="typeculture-${i}"><option value="">— Choisir —</option><option>OB</option><option>LL</option></select></div>
